@@ -1,32 +1,42 @@
-import React, { useState } from 'react'
-
+import React, { useState, useContext, useEffect } from 'react'
 
 import Card from './shared/Card'
 import Button from './shared/Button'
 import RatingSelect from './RatingSelect'
+import FeedbackContext from '../context/FeedbackContent'
 
 
-function FeedbackForm({ handleAdd }) {
+function FeedbackForm() {
   const [text, setText] = useState('')
   const [rating, setRating] = useState(10)
   const [btnDisabled, setBtnDisabled] = useState(true)
   const [message, setMessage] = useState('')
 
+  const { addFeedback, feedbackEdit, updateFeedback } = useContext(FeedbackContext)
 
-  const handleTextChange = (e) => {
+  useEffect(() => {
+    if (feedbackEdit.edit === true) {
+      setBtnDisabled(false)
+      setText(feedbackEdit.item.text)
+      setText(feedbackEdit.item.rating)
 
-    if (text === '') {
+    }
+  }, [feedbackEdit])
+
+  const handleTextChange = ({ target: { value } }) => { // 👈  get the value
+    if (value === '') {
       setBtnDisabled(true)
       setMessage(null)
-    } else if (text !== '' && text.trim().length <= 10) {
+      
+  // prettier-ignore
+    } else if (value.trim().length < 10) { // 👈 check for less than 10
       setMessage('Text must be at least 10 characters')
       setBtnDisabled(true)
     } else {
       setMessage(null)
       setBtnDisabled(false)
     }
-    console.log(e.target.value);
-    setText(e.target.value)
+    setText(value)
   }
 
   const handleSubmit = (e) => {
@@ -36,8 +46,16 @@ function FeedbackForm({ handleAdd }) {
         text,
         rating,
       }
-      handleAdd(newFeedback)
-      
+
+      if (feedbackEdit.edit === true) {
+        updateFeedback(feedbackEdit.item.id, newFeedback)
+      } else {
+        addFeedback(newFeedback)
+      }
+
+      // NOTE: reset to default state after submission
+      setBtnDisabled(true) // 👈  add this line to reset disabled
+      setRating(10) //👈 add this line to set rating back to 10
       setText('')
     }
   }
